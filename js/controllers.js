@@ -2,7 +2,7 @@
   'use strict';
   /*global MinimaxApp,_*/
 
-  app.controller('MainController', function($scope, Tree, Algorithms, Playback) {
+  app.controller('MainController', function($scope, Tree, TreeEncoder, Algorithms, Playback) {
     var self = $scope
 
     self.algorithm = 'minimaxab';
@@ -89,6 +89,20 @@
     self.resetTree = function() {
       self.tree.reset();
     };
+
+    self.generatePermalink = function() {
+      var root = self.editMode ? self.tree.root : self.originalRoot;
+      TreeEncoder.encode(root);
+      self.shared = true;
+
+      setTimeout(function() {
+        self.$apply(function() {
+          self.shared = false;
+        });
+      }, 5000);
+    };
+
+    TreeEncoder.apply(self.tree);
   });
 
   app.controller('EditNodeController', function($scope) {

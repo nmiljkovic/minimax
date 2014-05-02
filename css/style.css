@@ -79,3 +79,14 @@ svg#tree {
 .help:hover .glyphicon {
   display: none;
 }
+
+#author-microdata {
+  display: none;
+}
+
+.permalink {
+  position: absolute;
+  z-index: 9999;
+  right: 20px;
+  top: 20px;
+}

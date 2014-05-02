@@ -78,6 +78,15 @@
       </div>
     </div>
 
+    <a class="permalink btn btn-success" href="javascript:;" ng-click="generatePermalink()">
+      <span ng-hide="shared">
+        Share tree
+      </span>
+      <span ng-show="shared">
+        Your address bar has been updated!
+      </span>
+    </a>
+
     <svg id="tree"></svg>
 
     <div class="below-svg"></div>
@@ -209,7 +218,7 @@
 
     <!-- microdata -->
     <div itemscope itemtype="http://schema.org/Person" id="author-microdata">
-      <span itemprop="name">Nemanja Miljkovi훶</span>
+      <span itemprop="name">Nemanja Miljković</span>
       <img src="http://www.gravatar.com/avatar/7774629890f91892f59ea4bbf6cd46f4" itemprop="image" />
       <a href="mailto:nemanja.miljkovic@live.com" itemprop="email">
         nemanja.miljkovic@live.com
