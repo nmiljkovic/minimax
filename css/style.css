@@ -1,0 +1,81 @@
+
+body {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+svg#tree {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  position: absolute;
+  left: 0;
+  top: 60px;
+  width: 100%;
+  height: 500px;
+  border: 1px solid #eee;
+}
+
+.below-svg {
+  padding-top: 540px;
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
+}
+
+.node.hover {
+  cursor: pointer;
+}
+
+.node.hover circle, .node.selected circle {
+  fill: #a5e2e2;
+}
+
+.node text {
+  font: 15px sans-serif;
+  font-weight: bold;
+}
+
+.node.hover text, .node.selected text {
+  fill: #1b2abb;
+}
+
+.link, .link-cutoff {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+}
+
+.minimax-boundary-line {
+  fill: none;
+  stroke: #DDE5FF;
+  stroke-width: 2px;
+}
+
+.playback-controls {
+  margin-bottom: 10px;
+}
+
+.help {
+  display: inline-block;
+}
+
+@media (max-width: 1199px) {
+  .help {
+    display: none;
+  }
+}
+
+.help .help-text {
+  display: none;
+}
+
+.help:hover .help-text {
+  display: inline;
+}
+
+.help:hover .glyphicon {
+  display: none;
+}

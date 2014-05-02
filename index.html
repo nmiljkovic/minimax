@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Minimax with Alpha Beta pruning</title>
+
+  <script src="bower_components/angular/angular.min.js"></script>
+  <script src="bower_components/d3/d3.min.js"></script>
+  <script src="bower_components/lodash/dist/lodash.min.js"></script>
+
+  <script src="js/TreeD3.js"></script>
+  <script src="js/Tree.js"></script>
+
+  <script src="js/app.js"></script>
+  <script src="js/controllers.js"></script>
+  <script src="js/algorithms.js"></script>
+  <script src="js/services.js"></script>
+
+  <link rel="stylesheet" href="css/flatly.css"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body ng-app="MinimaxApp">
+
+  <div class="container" ng-controller="MainController">
+
+    <div class="row">
+      <div class="col-sm-12">
+
+        <div class="btn-group" ng-hide="editMode">
+          <a href="javascript:;" class="btn btn-success" ng-click="toggleEditMode()">
+            <i class="glyphicon glyphicon-edit"></i>
+            Enter edit mode
+          </a>
+        </div>
+
+        <div class="btn-group" ng-show="editMode">
+          <a href="javascript:;" class="btn btn-warning" ng-click="toggleEditMode()">
+            <i class="glyphicon glyphicon-ok"></i>
+            Exit edit mode
+          </a>
+          <a href="javascript:;" class="btn btn-danger" ng-click="resetTree()">
+            <i class="glyphicon glyphicon-ban-circle"></i>
+            Reset tree
+          </a>
+        </div>
+
+        <div class="btn-group">
+          <a href="javascript:;" class="btn btn-default"
+             ng-class="{'btn-info': maximize}" ng-click="setMaximize(true)">
+            Maximize
+          </a>
+          <a href="javascript:;" class="btn btn-default"
+             ng-class="{'btn-info': !maximize}" ng-click="setMaximize(false)">
+            Minimize
+          </a>
+        </div>
+
+        <a href="javascript:;" class="btn btn-info" ng-click="tree.tree.resetPanAndZoom()">
+          <i class="glyphicon glyphicon-eye-close"></i>
+          Reset pan and zoom
+        </a>
+
+        <div class="help">
+          <a class="btn btn-info" href="javascript:;">
+            <i class="glyphicon glyphicon-question-sign"></i>
+
+            <span class="help-text">
+              Use the scroll wheel to zoom. Click and drag to pan around.
+            </span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <svg id="tree"></svg>
+
+    <div class="below-svg"></div>
+
+    <div class="row" ng-controller="EditNodeController" ng-show="editMode">
+      <div class="col-sm-12">
+
+        <div ng-show="editingNode.id !== 0">
+          <p>
+            <a href="javascript:;" class="btn btn-primary"
+                ng-click="addChild()">
+              <i class="glyphicon glyphicon-plus"></i>
+              Add Child
+            </a>
+
+            <a href="javascript:;" class="btn btn-danger"
+                ng-click="removeNode()" ng-show="editingNode.id !== 1">
+              <i class="glyphicon glyphicon-minus"></i>
+              Remove
+            </a>
+
+            <a href="javascript:;" class="btn btn-danger"
+                ng-click="removeAllChildren()" ng-show="editingNode.children > 0">
+              <i class="glyphicon glyphicon-minus"></i>
+              Delete children
+            </a>
+
+            <a href="javascript:;" class="btn btn-info"
+               ng-click="moveLeft()" ng-class="{disabled: !canMoveLeft()}">
+              <i class="glyphicon glyphicon-chevron-left"></i>
+              Move node left
+            </a>
+
+            <a href="javascript:;" class="btn btn-info"
+               ng-click="moveRight()" ng-class="{disabled: !canMoveRight()}">
+              <i class="glyphicon glyphicon-chevron-right"></i>
+              Move node right
+            </a>
+          </p>
+
+          <p ng-show="editingNode.children === 0">
+            <label for="edit_value">Selected node value</label>
+            <input type="number" ng-model="editingNode.value" name="edit_value" id="edit_value" class="form-control" />
+          </p>
+        </div>
+
+        <p ng-show="editingNode.id == 0">
+          Select a node to edit it.
+        </p>
+
+      </div>
+    </div>
+
+    <div class="row playback-controls" ng-controller="PlaybackController" ng-hide="editMode">
+      <div class="col-sm-6">
+
+        <!-- control buttons -->
+        <div class="btn-group btn-group-justified">
+          <a href="javascript:;" class="btn btn-primary" ng-click="rewind()"
+             ng-class="{disabled: atStart()}">
+            <i class="glyphicon glyphicon-backward"></i>
+          </a>
+          <a href="javascript:;" class="btn btn-primary" ng-click="undo()"
+             ng-class="{disabled: atStart()}">
+            <i class="glyphicon glyphicon-step-backward"></i>
+          </a>
+          <a href="javascript:;" class="btn btn-primary" ng-click="play()" ng-hide="playing"
+             ng-class="{disabled: atEnd()}">
+            <i class="glyphicon glyphicon-play"></i>
+          </a>
+          <a href="javascript:;" class="btn btn-success" ng-click="pause()" ng-show="playing">
+            <i class="glyphicon glyphicon-pause"></i>
+          </a>
+          <a href="javascript:;" class="btn btn-primary" ng-click="advance()"
+             ng-class="{disabled: atEnd()}">
+            <i class="glyphicon glyphicon-step-forward"></i>
+          </a>
+          <a href="javascript:;" class="btn btn-primary" ng-click="fastforward()"
+             ng-class="{disabled: atEnd()}">
+            <i class="glyphicon glyphicon-forward"></i>
+          </a>
+        </div>
+
+      </div>
+
+      <div class="col-sm-6">
+
+        <!-- speed buttons -->
+        <div class="btn-group btn-group-justified">
+          <a href="javascript:;" class="btn btn-primary"
+             ng-class="{'btn-success': speed === 1000}"
+             ng-click="setSpeed(1000)">
+            Slow
+          </a>
+          <a href="javascript:;" class="btn btn-primary"
+             ng-class="{'btn-success': speed === 500}"
+             ng-click="setSpeed(500)">
+            Normal
+          </a>
+          <a href="javascript:;" class="btn btn-primary"
+             ng-class="{'btn-success': speed === 250}"
+             ng-click="setSpeed(250)">
+            Fast
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="row" ng-hide="editMode">
+      <div class="col-sm-12">
+
+        <!-- algorithm choice -->
+        <div class="btn-group btn-group-justified">
+          <a href="javascript:;" class="btn btn-default"
+             ng-click="setAlgorithm('minimax')"
+             ng-class="{'btn-success': algorithm == 'minimax'}">
+            Minimax
+          </a>
+          <a href="javascript:;" class="btn btn-default"
+             ng-click="setAlgorithm('minimaxab')"
+             ng-class="{'btn-success': algorithm == 'minimaxab'}">
+            Minimax with Alpha/Beta pruning
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
