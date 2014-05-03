@@ -3,47 +3,84 @@
   /*global MinimaxApp,Tree,TreeD3*/
 
   app.service('TreeEncoder', function() {
-    function encode(node, parent) {
-      var i, newNode = {};
+    function encode(node) {
       if (node.value !== false) {
-        newNode.v = parseInt(node.value, 10);
-      }
-      if (parent !== undefined) {
-        if (!parent.c) {
-          parent.c = [];
-        }
-        parent.c.push(newNode);
+        return node.value.toString();
       }
 
-      if (node.children) {
-        for (i = 0; i < node.children.length; i++) {
-          encode(node.children[i], newNode);
+      var result = "(", i;
+
+      for (i = 0; i < node.children.length; i++) {
+        result += encode(node.children[i]);
+        if (i !== node.children.length - 1) {
+          result += ",";
         }
       }
 
-      return newNode;
+      result += ")";
+      return result;
     }
 
-    function decode(node, parent, tree) {
-      var newNode, i;
+    function number(string, tree, cursor, parent) {
+      var breaks = [',', ')'], formedNumber = '', token;
 
-      var value = node.v !== undefined ? node.v : false;
+      while (true) {
+        if (cursor.i >= string.length) {
+          break;
+        }
 
-      if (parent !== undefined) {
-        newNode = tree.addNode(value, parent.id);
+        token = string.charAt(cursor.i);
+        if (breaks.indexOf(token) !== -1) {
+          break;
+        }
+
+        formedNumber += token;
+        cursor.i++;
+      }
+
+      tree.addNode(parseInt(formedNumber, 10), parent.id);
+    }
+
+    function list(string, tree, cursor, parent) {
+      var node, token;
+
+      if (parent === undefined) {
+        node = tree.root;
+        node.value = false;
       }
       else {
-        newNode = tree.root;
-        newNode.value = value;
+        node = tree.addNode(false, parent.id);
       }
 
-      if (node.c) {
-        for (i = 0; i < node.c.length; i++) {
-          decode(node.c[i], newNode, tree);
+      while (true) {
+        if (cursor.i >= string.length) {
+          break;
+        }
+
+        token = string.charAt(cursor.i);
+        if (token === ')') {
+          break;
+        }
+
+        if (token === '(') {
+          cursor.i++;
+          list(string, tree, cursor, node);
+        }
+        else if (token === ',') {
+          cursor.i++;
+        }
+        else {
+          number(string, tree, cursor, node);
         }
       }
+      cursor.i++;
+    }
 
-      return newNode;
+    function decode(string, tree) {
+      var cursor = {
+        i: 1
+      };
+      list(string, tree, cursor);
     }
 
     return {
@@ -55,14 +92,12 @@
 
         tree.reset();
         var base64tree = decodeURIComponent(hash.substr(6));
-        var jsonTree = window.atob(base64tree);
-        var treeObject = JSON.parse(jsonTree);
-        decode(treeObject, undefined, tree);
+        var treeString = window.atob(base64tree);
+        decode(treeString, tree);
       },
       encode: function(root) {
-        var object = encode(root);
-        var jsonString = JSON.stringify(object);
-        var base64tree = window.btoa(jsonString);
+        var encoded = encode(root);
+        var base64tree = window.btoa(encoded);
         var uriEncoded = encodeURIComponent(base64tree);
         window.location.hash = "#tree=" + uriEncoded;
         return uriEncoded;
